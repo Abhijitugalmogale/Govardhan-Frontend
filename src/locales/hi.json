@@ -1,0 +1,21 @@
+{
+    "welcome": "डेयरी फार्म मैनेजर में आपका स्वागत है",
+    "login": "लॉग इन करें",
+    "mobile_number": "मोबाइल नंबर",
+    "get_otp": "OTP प्राप्त करें",
+    "enter_otp": "OTP दर्ज करें",
+    "verify": "सत्यापित करें और लॉग इन करें",
+    "dashboard": "डैशबोर्ड",
+    "cows": "गायें",
+    "milk": "दूध उत्पादन",
+    "finance": "वित्त (Finances)",
+    "total_cows": "कुल गायें",
+    "pregnant_cows": "गर्भवती गायें",
+    "milk_today": "आज का दूध (लीटर)",
+    "monthly_income": "मासिक आय",
+    "monthly_expense": "मासिक खर्च",
+    "settings": "सेटिंग्स",
+    "logout": "लॉग आउट",
+    "add_cow": "गाय जोड़ें",
+    "pregnancy_tracker": "गर्भावस्था ट्रैकर"
+}

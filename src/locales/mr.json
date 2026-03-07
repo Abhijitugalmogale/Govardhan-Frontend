@@ -1,0 +1,21 @@
+{
+    "welcome": "डेअरी फार्म मॅनेजरमध्ये आपले स्वागत आहे",
+    "login": "लॉग इन करा",
+    "mobile_number": "मोबाईल नंबर",
+    "get_otp": "OTP मिळवा",
+    "enter_otp": "OTP प्रविष्ट करा",
+    "verify": "पडताळणी करा आणि लॉग इन करा",
+    "dashboard": "डॅशबोर्ड",
+    "cows": "गायी",
+    "milk": "दूध उत्पादन",
+    "finance": "आर्थिक (Finances)",
+    "total_cows": "एकूण गायी",
+    "pregnant_cows": "गर्भवती गायी",
+    "milk_today": "आजचे दूध (लिटर)",
+    "monthly_income": "मासिक उत्पन्न",
+    "monthly_expense": "मासिक खर्च",
+    "settings": "सेटिंग्ज",
+    "logout": "लॉग आउट",
+    "add_cow": "गाय जोडा",
+    "pregnancy_tracker": "गर्भधारणा ट्रॅकर"
+}

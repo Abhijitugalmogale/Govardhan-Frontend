@@ -1,0 +1,21 @@
+{
+    "welcome": "Welcome to Dairy Farm Manager",
+    "login": "Login",
+    "mobile_number": "Mobile Number",
+    "get_otp": "Get OTP",
+    "enter_otp": "Enter OTP",
+    "verify": "Verify & Login",
+    "dashboard": "Dashboard",
+    "cows": "Cows",
+    "milk": "Milk Production",
+    "finance": "Finances",
+    "total_cows": "Total Cows",
+    "pregnant_cows": "Pregnant Cows",
+    "milk_today": "Milk Produced Today (Liters)",
+    "monthly_income": "Monthly Income",
+    "monthly_expense": "Monthly Expenses",
+    "settings": "Settings",
+    "logout": "Logout",
+    "add_cow": "Add Cow",
+    "pregnancy_tracker": "Pregnancy Tracker"
+}

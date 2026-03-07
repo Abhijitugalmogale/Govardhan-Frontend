@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #86efac;
+  --color-primary-dark: #22c55e;
+  --color-secondary: #a8a29e;
+  --color-secondary-dark: #78716c;
+  --color-background: #fefce8;
+  --color-card: #ffffff;
+  --color-text: #1c1917;
+  
+  --font-sans: "Inter", "Roboto", "Helvetica", "Arial", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+  }
+}
