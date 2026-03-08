@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ClipboardList, Droplets, TrendingUp, TrendingDown, ArrowRight, Bell } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '../api';
+import { checkBackendConnectivity } from '../utils/backendCheck';
 import { toast } from 'react-toastify';
 import { format, subDays, differenceInDays } from 'date-fns';
 
@@ -18,7 +19,15 @@ const Dashboard: React.FC = () => {
         const fetchDashboardData = async () => {
             try {
                 setError(null);
-                console.log('Fetching dashboard data...');
+                console.log('Checking backend connectivity...');
+                
+                // First, check if backend is running
+                const connectivityCheck = await checkBackendConnectivity();
+                if (!connectivityCheck.isAvailable) {
+                    throw new Error(connectivityCheck.message);
+                }
+
+                console.log('Backend is available. Fetching dashboard data...');
                 const [cowsData, milkData, financeData] = await Promise.all([
                     api.get('/cows').catch(err => {
                         console.error('Cows API Error:', err);
@@ -56,6 +65,7 @@ const Dashboard: React.FC = () => {
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
                 <h2 className="text-red-800 font-semibold mb-2">Failed to Load Dashboard</h2>
                 <p className="text-red-600 mb-4">{error}</p>
+                <p className="text-sm text-red-500 mb-6">Make sure the backend server is running and reachable.</p>
                 <button 
                     onClick={() => window.location.reload()} 
                     className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg"

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Smartphone, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Smartphone, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { checkBackendConnectivity } from '../utils/backendCheck';
 
 const Login: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -13,6 +14,22 @@ const Login: React.FC = () => {
     const [phone, setPhone] = useState('');
     const [otp, setOtp] = useState('');
     const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+    const [backendError, setBackendError] = useState<string | null>(null);
+    const [isCheckingBackend, setIsCheckingBackend] = useState(false);
+
+    React.useEffect(() => {
+        // Check backend connectivity on page load
+        const checkBackend = async () => {
+            setIsCheckingBackend(true);
+            const result = await checkBackendConnectivity();
+            if (!result.isAvailable) {
+                setBackendError(result.message);
+                console.warn('Backend connectivity issue:', result);
+            }
+            setIsCheckingBackend(false);
+        };
+        checkBackend();
+    }, []);
 
     const setupRecaptcha = () => {
         if (!(window as any).recaptchaVerifier) {
@@ -108,6 +125,17 @@ const Login: React.FC = () => {
 
                     <h1 className="text-3xl font-extrabold text-gray-800 mb-2">{t('welcome')}</h1>
                     <p className="text-gray-600 mb-8">{step === 1 ? 'Enter your mobile number to continue.' : 'Enter the code sent to your phone.'}</p>
+
+                    {backendError && (
+                        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <p className="text-sm font-medium text-yellow-800">Backend Connection Warning</p>
+                                <p className="text-xs text-yellow-700 mt-1">{backendError}</p>
+                                <p className="text-xs text-yellow-600 mt-2">You may still log in, but dashboard data may not load.</p>
+                            </div>
+                        </div>
+                    )}
 
                     {step === 1 ? (
                         <form onSubmit={handleSendOtp} className="space-y-6">
