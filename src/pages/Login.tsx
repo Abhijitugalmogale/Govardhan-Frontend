@@ -15,18 +15,15 @@ const Login: React.FC = () => {
     const [otp, setOtp] = useState('');
     const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
     const [backendError, setBackendError] = useState<string | null>(null);
-    const [isCheckingBackend, setIsCheckingBackend] = useState(false);
 
     React.useEffect(() => {
         // Check backend connectivity on page load
         const checkBackend = async () => {
-            setIsCheckingBackend(true);
             const result = await checkBackendConnectivity();
             if (!result.isAvailable) {
                 setBackendError(result.message);
                 console.warn('Backend connectivity issue:', result);
             }
-            setIsCheckingBackend(false);
         };
         checkBackend();
     }, []);
