@@ -20,34 +20,70 @@ const getHeaders = () => {
 
 export const api = {
     get: async (endpoint: string) => {
-        const res = await fetch(`${API_BASE}${endpoint}`, { headers: getHeaders() });
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
+        try {
+            const res = await fetch(`${API_BASE}${endpoint}`, { headers: getHeaders() });
+            const text = await res.text();
+            if (!res.ok) {
+                console.error(`API Error [${res.status}]:`, text);
+                throw new Error(`${res.status}: ${text}`);
+            }
+            return JSON.parse(text);
+        } catch (error) {
+            console.error(`GET ${endpoint} failed:`, error);
+            throw error;
+        }
     },
     post: async (endpoint: string, data: any) => {
-        const res = await fetch(`${API_BASE}${endpoint}`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
+        try {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+            const text = await res.text();
+            if (!res.ok) {
+                console.error(`API Error [${res.status}]:`, text);
+                throw new Error(`${res.status}: ${text}`);
+            }
+            return JSON.parse(text);
+        } catch (error) {
+            console.error(`POST ${endpoint} failed:`, error);
+            throw error;
+        }
     },
     put: async (endpoint: string, data: any) => {
-        const res = await fetch(`${API_BASE}${endpoint}`, {
-            method: 'PUT',
-            headers: getHeaders(),
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
+        try {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+            const text = await res.text();
+            if (!res.ok) {
+                console.error(`API Error [${res.status}]:`, text);
+                throw new Error(`${res.status}: ${text}`);
+            }
+            return JSON.parse(text);
+        } catch (error) {
+            console.error(`PUT ${endpoint} failed:`, error);
+            throw error;
+        }
     },
     delete: async (endpoint: string) => {
-        const res = await fetch(`${API_BASE}${endpoint}`, {
-            method: 'DELETE',
-            headers: getHeaders()
-        });
-        if (!res.ok) throw new Error(await res.text());
-        return res.json();
+        try {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            const text = await res.text();
+            if (!res.ok) {
+                console.error(`API Error [${res.status}]:`, text);
+                throw new Error(`${res.status}: ${text}`);
+            }
+            return JSON.parse(text);
+        } catch (error) {
+            console.error(`DELETE ${endpoint} failed:`, error);
+            throw error;
+        }
     }
 };

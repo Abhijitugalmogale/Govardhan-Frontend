@@ -9,6 +9,7 @@ import { format, subDays, differenceInDays } from 'date-fns';
 const Dashboard: React.FC = () => {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [cows, setCows] = useState<any[]>([]);
     const [milk, setMilk] = useState<any[]>([]);
     const [finance, setFinance] = useState<any[]>([]);
@@ -16,18 +17,32 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
+                setError(null);
+                console.log('Fetching dashboard data...');
                 const [cowsData, milkData, financeData] = await Promise.all([
-                    api.get('/cows'),
-                    api.get('/milk'),
-                    api.get('/finance')
+                    api.get('/cows').catch(err => {
+                        console.error('Cows API Error:', err);
+                        throw new Error(`Failed to fetch cows: ${err.message}`);
+                    }),
+                    api.get('/milk').catch(err => {
+                        console.error('Milk API Error:', err);
+                        throw new Error(`Failed to fetch milk: ${err.message}`);
+                    }),
+                    api.get('/finance').catch(err => {
+                        console.error('Finance API Error:', err);
+                        throw new Error(`Failed to fetch finance: ${err.message}`);
+                    })
                 ]);
-                setCows(cowsData);
-                setMilk(milkData);
-                setFinance(financeData);
+                console.log('Dashboard data loaded:', { cowsData, milkData, financeData });
+                setCows(Array.isArray(cowsData) ? cowsData : []);
+                setMilk(Array.isArray(milkData) ? milkData : []);
+                setFinance(Array.isArray(financeData) ? financeData : []);
                 setLoading(false);
             } catch (error) {
-                console.error(error);
-                toast.error('Failed to load dashboard data');
+                const errorMsg = error instanceof Error ? error.message : 'Failed to load dashboard data';
+                console.error('Dashboard Error:', errorMsg);
+                setError(errorMsg);
+                toast.error(errorMsg);
                 setLoading(false);
             }
         };
@@ -35,6 +50,21 @@ const Dashboard: React.FC = () => {
     }, []);
 
     if (loading) return <div className="flex h-64 items-center justify-center">Loading Dashboard...</div>;
+
+    if (error) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                <h2 className="text-red-800 font-semibold mb-2">Failed to Load Dashboard</h2>
+                <p className="text-red-600 mb-4">{error}</p>
+                <button 
+                    onClick={() => window.location.reload()} 
+                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg"
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
 
     // --- Statistics Calculations ---
     const totalCows = cows.length;
