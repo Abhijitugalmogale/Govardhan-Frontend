@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">govardhan</string>
+    <string name="title_activity_main">govardhan</string>
+    <string name="package_name">com.govardhan.dairyapp</string>
+    <string name="custom_url_scheme">com.govardhan.dairyapp</string>
+    <string name="server_client_id">195477983983-j6t5p8e2djnkijstpcfael4sshi64lk2.apps.googleusercontent.com</string>
+</resources>

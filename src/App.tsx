@@ -31,18 +31,36 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return children;
 };
 
+// Public Route Component (Redirects to dashboard if already logged in)
+const AuthRoute = ({ children }: { children: React.ReactNode }) => {
+  const [loading, setLoading] = React.useState(true);
+  const [user, setUser] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-gray-50 text-primary-dark font-bold text-xl">Loading...</div>;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return children;
+};
+
 function App() {
   return (
     <Router>
       <div className="font-sans text-text">
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
           <Route path="/cows" element={<ProtectedRoute><Layout><Cows /></Layout></ProtectedRoute>} />
           <Route path="/pregnancy" element={<ProtectedRoute><Layout><Pregnancy /></Layout></ProtectedRoute>} />
           <Route path="/milk" element={<ProtectedRoute><Layout><Milk /></Layout></ProtectedRoute>} />
           <Route path="/finance" element={<ProtectedRoute><Layout><Finance /></Layout></ProtectedRoute>} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         <ToastContainer position="top-center" />
       </div>

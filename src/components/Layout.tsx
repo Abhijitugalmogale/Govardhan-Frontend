@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ClipboardList, Droplets, Wallet, Bell, Menu, X, LogOut, HeartPulse } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { t, i18n } = useTranslation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            navigate('/login');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     const navItems = [
         { name: t('dashboard'), path: '/dashboard', icon: Home },
@@ -48,7 +58,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         <button onClick={() => i18n.changeLanguage('hi')} className={`text-xs flex-1 py-1 rounded-md transition-shadow ${i18n.language === 'hi' ? 'bg-white shadow text-primary-dark font-bold' : 'text-gray-500'}`}>HI</button>
                         <button onClick={() => i18n.changeLanguage('mr')} className={`text-xs flex-1 py-1 rounded-md transition-shadow ${i18n.language === 'mr' ? 'bg-white shadow text-primary-dark font-bold' : 'text-gray-500'}`}>MR</button>
                     </div>
-                    <button onClick={() => navigate('/login')} className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-500 hover:bg-red-50 transition-colors">
+                    <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-500 hover:bg-red-50 transition-colors">
                         <LogOut className="w-5 h-5" />
                         {t('logout')}
                     </button>
@@ -99,7 +109,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                 <button onClick={() => { i18n.changeLanguage('hi'); setIsMobileMenuOpen(false); }} className={`text-xs flex-1 py-1 rounded-md transition-shadow ${i18n.language === 'hi' ? 'bg-white shadow text-primary-dark font-bold' : 'text-gray-500'}`}>HI</button>
                                 <button onClick={() => { i18n.changeLanguage('mr'); setIsMobileMenuOpen(false); }} className={`text-xs flex-1 py-1 rounded-md transition-shadow ${i18n.language === 'mr' ? 'bg-white shadow text-primary-dark font-bold' : 'text-gray-500'}`}>MR</button>
                             </div>
-                            <button onClick={() => { setIsMobileMenuOpen(false); navigate('/login'); }} className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-500 hover:bg-red-50 transition-colors">
+                            <button onClick={() => { setIsMobileMenuOpen(false); handleLogout(); }} className="flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-500 hover:bg-red-50 transition-colors">
                                 <LogOut className="w-5 h-5" />
                                 {t('logout')}
                             </button>

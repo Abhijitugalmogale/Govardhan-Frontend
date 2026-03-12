@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Smartphone, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Capacitor } from '@capacitor/core';
+import { auth, googleProvider } from '../config/firebase';
 import { checkBackendConnectivity } from '../utils/backendCheck';
 
 const Login: React.FC = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-    const [step, setStep] = useState<1 | 2>(1);
-    const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState('');
-    const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
     const [backendError, setBackendError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     React.useEffect(() => {
         // Check backend connectivity on page load
@@ -28,69 +27,51 @@ const Login: React.FC = () => {
         checkBackend();
     }, []);
 
-    const setupRecaptcha = () => {
-        if (!(window as any).recaptchaVerifier) {
-            (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                size: 'invisible'
-            });
-        }
-    };
-
-    const handleSendOtp = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (phone.length < 10) {
-            toast.error('Please enter a valid mobile number');
-            return;
-        }
-
-        const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
-
+    const handleGoogleSignIn = async () => {
+        setIsLoading(true);
         try {
-            setupRecaptcha();
-            const appVerifier = (window as any).recaptchaVerifier;
-            const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-            setConfirmationResult(confirmation);
-            toast.success(`OTP sent to ${formattedPhone}`);
-            setStep(2);
-        } catch (error: any) {
-            console.error("OTP Error:", error);
+            let user;
 
-            // Provide more specific error messages for common Firebase issues
-            let errorMessage = "Failed to send OTP. Please try again.";
-            if (error.code === 'auth/billing-not-enabled') {
-                errorMessage = "Firebase Error: Project must be on the Blaze plan to send SMS.";
-            } else if (error.message) {
-                errorMessage = error.message;
+            // Check if running natively (Android/iOS)
+            if (Capacitor.isNativePlatform()) {
+                // Use Native Capacitor Google Auth
+                const googleUser = await GoogleAuth.signIn();
+                
+                // Create a Firebase credential from the native Google ID token
+                const credential = GoogleAuthProvider.credential(googleUser.authentication.idToken);
+                
+                // Sign in to Firebase with the credential
+                const result = await signInWithCredential(auth, credential);
+                user = result.user;
+            } else {
+                // Fallback to standard web popup for browser testing
+                const result = await signInWithPopup(auth, googleProvider);
+                user = result.user;
+            }
+
+            toast.success(`Welcome, ${user.displayName || 'User'}!`);
+            navigate('/dashboard');
+        } catch (error: any) {
+            console.error("Google Sign-In Error:", error);
+            
+            let errorMessage = "Failed to sign in with Google. Please try again.";
+            
+            // Handle Web errors
+            if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage = "Sign-in popup was closed before completing.";
+            } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
+                errorMessage = "Google Sign-In is not supported in this environment (e.g., HTTP).";
+            } else if (error.code === 'auth/popup-blocked') {
+                errorMessage = "Sign-in popup was blocked by the browser. Please allow popups for this site.";
+            } 
+            // Generic fallback
+            else if (error.message) {
+                 errorMessage = error.message;
             }
 
             toast.error(errorMessage);
-
-            // Clear recaptcha on error so user can try again
-            if ((window as any).recaptchaVerifier) {
-                (window as any).recaptchaVerifier.clear();
-                (window as any).recaptchaVerifier = null;
-                const container = document.getElementById('recaptcha-container');
-                if (container) container.innerHTML = '';
-            }
-        }
-    };
-
-    const handleVerifyOtp = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (otp.length < 4) {
-            toast.error('Invalid OTP');
-            return;
-        }
-
-        if (!confirmationResult) return;
-
-        try {
-            await confirmationResult.confirm(otp);
-            toast.success('Login Successful!');
-            navigate('/dashboard');
-        } catch (error: any) {
-            console.error("Verification Error:", error);
-            toast.error('Invalid OTP. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -121,7 +102,7 @@ const Login: React.FC = () => {
                     </div>
 
                     <h1 className="text-3xl font-extrabold text-gray-800 mb-2">{t('welcome')}</h1>
-                    <p className="text-gray-600 mb-8">{step === 1 ? 'Enter your mobile number to continue.' : 'Enter the code sent to your phone.'}</p>
+                    <p className="text-gray-600 mb-8">Sign in with your Google account to access your dashboard.</p>
 
                     {backendError && (
                         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
@@ -134,69 +115,34 @@ const Login: React.FC = () => {
                         </div>
                     )}
 
-                    {step === 1 ? (
-                        <form onSubmit={handleSendOtp} className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('mobile_number')}</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Smartphone className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="tel"
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-primary-dark focus:border-primary-dark transition-shadow text-gray-900 shadow-sm"
-                                        placeholder="+91 98765 43210"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div id="recaptcha-container"></div>
-                            <button
-                                type="submit"
-                                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-dark hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark transition-colors"
-                            >
-                                {t('get_otp')}
-                                <ArrowRight className="ml-2 h-4 w-4" />
-                            </button>
-                        </form>
-                    ) : (
-                        <form onSubmit={handleVerifyOtp} className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">{t('enter_otp')}</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <ShieldCheck className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:ring-primary-dark focus:border-primary-dark transition-shadow text-gray-900 shadow-sm tracking-widest text-center font-bold text-lg"
-                                        placeholder="000000"
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <button
-                                type="submit"
-                                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-primary-dark hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark transition-colors"
-                            >
-                                {t('verify')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setStep(1)}
-                                className="w-full text-center text-sm text-gray-500 hover:text-primary-dark transition-colors"
-                            >
-                                Change Mobile Number
-                            </button>
-                        </form>
-                    )}
+                    <div className="space-y-6">
+                        <button
+                            onClick={handleGoogleSignIn}
+                            disabled={isLoading}
+                            className={`w-full flex justify-center items-center py-3.5 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-dark transition-all ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-primary-dark border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
+                                        <title>Google Logo</title>
+                                        <clipPath id="g"><path d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></clipPath>
+                                        <g className="colors" clipPath="url(#g)">
+                                            <path fill="#FBBC05" d="M0 37V11l17 13z"/>
+                                            <path fill="#EA4335" d="M0 11l17 13 7-6.1L48 14V0H0z"/>
+                                            <path fill="#34A853" d="M0 37l30-23 7.9 1L48 0v48H0z"/>
+                                            <path fill="#4285F4" d="M48 48L17 24l-4-3 35-10z"/>
+                                        </g>
+                                    </svg>
+                                    Sign in with Google
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
                 <div className="bg-gray-50/50 px-8 py-4 border-t border-gray-100 flex justify-center">
-                    <p className="text-xs text-gray-400">Secure OTP Authentication powered by Firebase</p>
+                    <p className="text-xs text-gray-400">Secure Authentication powered by Google</p>
                 </div>
             </div>
         </div>
